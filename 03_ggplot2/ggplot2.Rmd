@@ -5,9 +5,54 @@ date: '2023-10-05'
 output: html_document
 ---
 
+# Hands-on Outputs
+
+## Output 1
+
+**Using the same dataset, create a histogram for the variable area, and set the bins to 10.**
+
 ```{r}
 library(ggplot2)
 ggplot(data = rock, aes(x = area)) +
     geom_histogram(bins = 10) + 
     labs(x = 'Area')
 ```
+
+## Output 2
+
+**Which variable was used as the basis of the grouping?** Clarity
+
+# Exercises
+
+## Exercise 1
+**Using the *mtcars* dataset, is there a significant difference in fuel efficiency based on transmission type?**
+
+```{r}
+ggplot(mtcars, aes(y = mpg, group = am, fill = am)) +
+    geom_boxplot() + labs(title = 'Miles per gallon',
+                          x = 'Transmission Type', 
+                          y = 'Fuel efficiency')
+```
+
+## Exercise 2
+**Using the *InsectSprays* dataset, which brand appears to be the most effective?**
+
+```{r}
+ggplot(data = InsectSprays, aes(y = count, x = spray, fill = spray)) +
+	geom_bar(stat = 'summary', fun = 'sum') +
+	labs(title = 'Insect Kill Count of Each Spray Brand')
+```
+
+# Exercise 3
+
+**Using the *trees* dataset, which of the two variables exhibit a linear relationship?**
+
+```{r}
+ggplot(data = trees,
+       aes(x = Girth, y = Volume)) + 
+    geom_point() + 
+    labs(x = "Tree diameter", y = "Volume of tree",
+         title = "Relationship between tree diameter and volume") +
+    geom_smooth(se = F)
+```
+
