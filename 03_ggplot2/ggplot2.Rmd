@@ -1,0 +1,13 @@
+---
+title: "ggplot2"
+author: "Kaila Velasco"
+date: '2023-10-05'
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+ggplot(data = rock, aes(x = area)) +
+    geom_histogram(bins = 10) + 
+    labs(x = 'Area')
+```
