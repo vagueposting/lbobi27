@@ -1,0 +1,122 @@
+---
+title: "Other Visualization Exercises"
+author: "Kaila Velasco"
+date: "2023-10-05"
+output: html_document
+---
+```{r include=FALSE}
+library(gplots)
+library(RColorBrewer)
+library(circlize)
+```
+# Hands-On Outputs
+
+## Output 1
+
+**Why was the previous set of commands executed?**
+
+This is to reformat the .csv file into a data matrix, so R can perform operations on or with the data with greater ease than if we simply kept the data from the csv as-is.
+
+## Output 2
+
+**Recreate the heat map using a different color palette.**
+
+```{r}
+univ <- read.csv(file = 'university.csv', header = TRUE)
+row.names(univ) <- univ$University
+univ[1] <- NULL
+univ <- as.matrix(univ)
+univ
+subjects <- c("Life Science", "Physical Science", "Health", "It", 'Engineering', 'Social Science', 'Humanities', 'Business')
+heatmap.2(univ, col = brewer.pal(6, "PuBuGn"),
+          trace = 'none',
+          Colv = NA,
+          Rowv = NA,
+          density.info = 'none',
+          margins = c(7,5),
+          labCol = subjects)
+```
+
+## Output 3
+
+**How did the paper use chord diagrams? What information or data was summarized/visualized through this type of plot?**
+
+The paper used chord diagrams to depict relationships (and to compare the strength of relationships) between different gastric cancer testing methods with different machine learning methods. Also, from what I understand, the different machine learning methods are also examined based on how often they are used in conjunction with one another.
+
+## Output 4
+
+**Explain the contents of the dataset and the information they convey.**
+
+From my understanding, the row headers are different gastric cancer diagnostic tests, whereas the columns are different machine learning studies which reference or involve the diagnostic test in question. These are sorted by the kind of machine learning methodology used.
+
+# Exercises
+
+## Exercise 1
+
+**Using the university.csv dataset, create a bar plot to demonstrate that the information conveyed by heat maps can also be conveyed by bar plots. When should you use one over the other?**
+
+```{r}
+barplot2(univ, col = brewer.pal(7, "PuBuGn"), beside = TRUE, names.arg = subjects)
+```
+
+## Exercise 2
+
+**Create your own heat map. You can create a hypothetical dataset or download an existing dataset from the internet (cite the source). Show the code and explain the data being visualized.**
+
+```{r}
+vacay <- read.csv('vacay.csv')
+rownames(vacay) <- vacay$Subject
+vacay[1]<- NULL
+vacay <- as.matrix(vacay)
+vacay
+days = as.character(1:5)
+heatmap.2(vacay,
+          col=brewer.pal(8,"YlGnBu"),
+          trace = "none",
+          Colv = NA,
+          Rowv = NA,
+          key = TRUE,
+          density.info = "none",
+          margins=c(3,3),
+          labCol = days)
+```
+
+The data being illustrated in this heatmap is a hypothetical dataset created using semi-random values generated through Microsoft Excel. The imaginary study is as follows: ten test-customers (tourists?) were invited to a resort for a five-day vacation during its soft opening, and at the end of the day were made to answer questionnaires about how much they enjoyed their day in terms of meals, access to amenities, conveniences, etc. From their answers, scores were obtained. The heatmap picture is made to depict how much an individual tourist enjoyed their day, with a deeper blue color indicating higher enjoyment. Each row represents an individual tourist, whereas a column represents a day.
+
+When I randomized these values, I made it so that there were increasingly higher odds of getting a low enjoyment score the further you go (so as to simulate the tourists losing interest.) In practice, though, tourists seemed to enjoy Days 2 and 3 the most, with many having lost interest on Day 4.
+
+## Exercise 3
+
+**What are the limitations of chord diagrams?**
+
+Chord diagrams lack numerical values, and the data visualization is almost purely visual. They can also look very cluttered if there are too many connections or categories at play, which makes them slightly difficult for certain people (including myself) to parse.
+
+## Exercise 4
+
+**Create your own chord diagram. You can create a hypothetical dataset or download an existing dataset from the internet (cite the source). Show the code and explain the data being visualized.**
+
+```{r}
+proseka <- read.csv('proseka.csv')
+psColor <- c(Ichika = '#33AAEE', Minori = '#FFCDAC', Kohane = '#FF679A', Tsukasa = '#FFBB00', Kanade = '#BB6588', Cool = '#3858ff', Cute = '#ff7686', Happy = '#ff9a5c', Mysterious = '#7a69c4', Pure = '#00b936')
+row.names(proseka) <- proseka$X
+proseka[1] <- NULL
+proseka <- as.matrix(proseka)
+proseka
+chordDiagram(proseka, 
+             grid.col = psColor,
+             annotationTrack = c("name", "grid"),
+             transparency = 0.2,
+             link.lwd = 1,
+             link.lty = 1,
+             link.border = 0.5)
+```
+
+*Hatsune Miku: Colorful Stage* is a music game for mobile devices with a card-collecting mechanic. As of the time of writing, the game is made up of 30 characters, with five Virtual Singers (“voiced” by vocal synthesizer software) and the remaining 25 being human characters portrayed by human actors
+
+A card can have one out of five attributes: “Cool,” “Cute,” “Happy,” “Mysterious,” and “Pure.” Using a combination of the correct attribute and the correct character is a big deal for players especially with regards to gaining high scores and rewards from gameplay.
+
+In this dataset I constructed, I counted how many of each attribute was found in the set of 4-star cards (the highest rarity possible for a card, excluding the special “Birthday” cards released on characters’ birthdays.) Since there are a whopping 25 human characters, I decided to just count for the five characters who are considered the “protagonists” of the game: Ichika Hoshina, Minori Hanasato, Kohane Azusawa, Tsukasa Tenma, and Kanade Yoisaki.
+
+The chord diagram is able to accurately represent the proportion of high-rarity card Attributes for each character. Kanade has a lot of Mysterious cards, while Kohane has plenty of Cute cards. It is also noticeable that Tsukasa and Minori have similar proportions of Attributes.
+
+While I know this application of chord diagrams is pretty silly, I think it’s an interesting way to visualize the content the game offers in terms of gameplay mechanics. 

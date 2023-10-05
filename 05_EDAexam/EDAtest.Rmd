@@ -1,0 +1,264 @@
+---
+title: "Exploratory Data Analysis Exam"
+author: "Kaila Alyssa A. Velasco"
+date: "2023-10-02"
+output:
+  html_document:
+    df_print: paged
+---
+# Description of dataset
+The exam provided a dataset of three different penguin species residing in a set of three Antarctic islands. The variables include the species of an individual specimen, the island it was found in, beak length (mm), beak depth (mm), flipper length (mm), and body mass (g). All the data is directly taken or modified/derived from this dataset.
+
+# Starting up
+
+```{r include=TRUE}
+peng <- read.csv('penguins_size-1.csv')
+```
+The .csv file was already in a suitable format, so I’m not going to make any big structural changes.
+
+Before anything else, let us initialize the necessary libraries.
+
+```{r message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(circlize)
+```
+
+Let's check the data out:
+```{r}
+summary(peng)
+tail(peng)
+```
+
+There are NA values, and at least one row with "." instead of a sex, so let's get rid of them. We'll use `na.omit()` We'll make a new variable, `peng01`, so we can keep the original `peng` in case something goes wrong while wrangling.
+
+```{r}
+peng01 <- peng %>% na.omit() %>% filter(sex != '.')
+tail(peng01)
+```
+
+As we can see, the number of observations in the data was reduced.
+
+Body mass is recorded in grams, so out of personal preference I am converting these to kilograms.
+
+```{r}
+peng01 <- peng01 %>% 
+         mutate(body_mass_kg = body_mass_g / 1000) %>% 
+         select(
+             species, 
+             island, 
+             bill_length_mm, 
+             bill_depth_mm, 
+             flipper_length_mm, 
+             body_mass_kg, 
+             sex)
+summary(peng01)
+```
+
+Lastly, for this exercise, I’m using the palette “FantasticFox1” from the Wes Anderson palettes package. For posterity I’m going to put this down. 
+
+```{r}
+library(wesanderson)
+```
+
+# Penguin Distribution
+For this section I created a matrix. Each row is a species, and each column is an island. Every cell will thus represent the number of each species on an individual island.
+
+I tried to use `length()` but I had no idea why it was not working (or if there was an actual function which suited my needs,) so I decided to cheat a little and use `tail()` along with dplyr commands. Work smart, not hard.
+
+The circlize library is used in this section.
+## Isolating species and island columns
+```{r}
+peng02 <- peng01 %>% select(species, island)
+tail(peng02)
+```
+## Finding how many species there are in a specific island
+```{r}
+tail(peng02 %>% filter(c(species == 'Adelie' & island == 'Torgersen')))
+tail(peng02 %>% filter(species == 'Adelie' & island == 'Dream'))
+tail(peng02 %>% filter(species == 'Adelie' & island == 'Biscoe'))
+tail(peng02 %>% filter(species == 'Chinstrap' & island == 'Torgersen'))
+tail(peng02 %>% filter(species == 'Chinstrap' & island == 'Dream'))
+tail(peng02 %>% filter(species == 'Chinstrap' & island == 'Biscoe'))
+tail(peng02 %>% filter(species == 'Gentoo' & island == 'Torgersen'))
+tail(peng02 %>% filter(species == 'Gentoo' & island == 'Dream'))
+tail(peng02 %>% filter(species == 'Gentoo' & island == 'Biscoe'))
+```
+Now, using the last row numbers, we now have counts for individual populations.
+
+## Importing the data as a matrix
+```{r}
+pd <- c(47, 0, 0, 55, 68, 0, 44, 0, 119)
+pd <- matrix(pd, nrow = 3, ncol = 3)
+rownames(pd) <- c('Adelie', 'Chinstrap', 'Gentoo')
+colnames(pd) <- c('Torgersen', 'Dream', 'Biscoe')
+
+pd
+```
+
+## Setting colors
+The wes_palette() function can create new iterations of a base color scheme by interpolation. Since there are six groups (3 islands and 3 species) we will need a palette with six colors.
+```{r}
+pdCol <- wes_palette(6, name = 'FantasticFox1', type = 'continuous')
+```
+
+## Constructing the chord diagram
+```{r}
+chordDiagram(pd, annotationTrack = c('name', 'grid'), grid.col = pdCol, transparency = 0.25, link.lwd = 1, link.lty = 1, link.border = 0)
+```
+
+## Analysis
+In my opinion, the chord diagram visualizes the distribution of penguin species better than a bar graph does. In the analysis I’ve carried out, the distribution is more important than the exact numbers.
+
+All gentoo specimens could be found in the island of Biscoe, but that same island also has a minority of Adelie penguins. Despite being only found in Biscoe, the gentoo are the second most abundant.
+
+Chinstrap penguins, the least abundant at only 68 specimens, are exclusively found on Dream Island.
+
+Torgersen only has a small population of Adelie penguins, which, as can be seen, are found in all three of the islands at different proportions.
+# Correlations between species and weight
+Firstly, to show the weight ranges of each species, sorted by sex, a bar graph was generated. 
+```{r}
+ggplot(data = peng01, aes(x = species, y = body_mass_kg, fill = sex)) +
+    geom_boxplot() +
+    scale_fill_manual(values = wes_palette('FantasticFox1')) +
+    labs(title = 'Distribution of body weights based on species',
+         x = 'Species', y = 'Body mass (kg)')
+```
+
+## Analysis
+I mentioned earlier that Gentoo penguins are the second most abundant in the dataset, and take up most of the Biscoe island’s penguin population. 
+
+The Gentoo having higher minimums and maximums made me wonder a little, so I did some research. It turns out that the Gentoo penguins have recently demonstrated an increasing population (Lynch et al., 2009; Juáres et al., 2019) as well as a tendency to forage near their nesting areas, indicating that they are “winning” the competition (Kokubun et al., 2009). Additionally, Gentoo penguins reproduce on ice-free areas (Davis & Darby, 2012), and are as such considered as plausible markers for climate change (Carpenter-Kling et al., 2019).
+
+Meanwhile, in the studies mentioned above, it is mentioned at certain points that Chinstrap and Adelie penguins are struggling with surviving.
+
+Additionally, I used the `arrange()` function from dplyr to check on the Chinstrap penguins, and those dots are thankfully only outliers.
+
+# Examining sizes
+Now that we have established a potential pattern between species distribution and weight, let’s take a look at the other dimensions provided, and see if there are any correlations.
+
+## Does island of residence affect body mass?
+Differing body masses could indicate differences in feeding efficiency. To this end, I generated a bar graph to examine if there was a relationship between the island of residence with the body mass of Adelie penguins.
+
+```{r}
+ggplot(data = (peng01 %>% filter(species == 'Adelie')), 
+       aes(x = island,
+           y = body_mass_kg,
+           fill = as.factor(sex))) +
+    geom_bar(position = 'dodge', stat = 'identity') + scale_fill_manual(values = wes_palette('FantasticFox1')) +
+    labs(title = 'Comparing body masses of Adelie penguins in different islands',
+         x = 'Island',
+         y = 'Body mass (kg)',
+         fill = 'Sex')
+```
+
+As can be seen, there is no strong distinction. Male penguins are heavier than their female counterparts.
+```{r}
+ggplot(data = (peng01 %>% filter(species == 'Adelie')), 
+       aes(x = body_mass_kg, 
+           fill = as.factor(island))) +
+    geom_histogram(bins = 10) + 
+    scale_fill_manual(values = wes_palette('FantasticFox1')) +
+    labs(title = 'Examining body mass distribution of Adelie penguins',
+         x = 'Body mass (kg)', y = '',
+         fill = 'Island')
+```
+
+Even in a histogram, the “peaks” of each island share a visually similar pattern.
+
+## Flipper length vs Body mass
+```{r}
+ggplot(data = peng01, 
+       aes(x = flipper_length_mm, 
+           y = body_mass_kg, 
+           fill = as.factor(species))) +
+    geom_point(shape = 21, size = 2, color='thistle4') + 
+    scale_fill_manual(values = wes_palette('FantasticFox1')) +
+    labs(title = 'Comparing body mass with flipper length',
+         x = 'Flipper length (mm)',
+         y = 'Body mass (kg)',
+         fill = 'Species')
+```
+
+The scatter plot shows that there is a positive relation between flipper length and body mass. It could just be that bigger penguins would simply have bigger flippers.
+
+## Examining Bill Length and Body Mass
+
+```{r}
+ggplot(data = peng01, 
+       aes(x = bill_length_mm, 
+           y = body_mass_kg, 
+           fill = as.factor(species))) +
+    geom_point(shape = 21, size = 2, color='thistle4') + 
+    scale_fill_manual(values = wes_palette('FantasticFox1')) +
+    labs(title = 'Comparing body mass with bill length',
+         x = 'Bill length (mm)',
+         y = 'Body mass (kg)',
+         fill = 'Species') + geom_smooth(method = lm, size = 0.5, color = 'thistle4')
+```
+
+In all three species, there is a positive linear relationship between bill length and body mass. The trendline is steepest for the Gentoo penguins, while it is far more gradual for Chinstrap penguins. This suggests a much higher importance for bill length among Gentoo penguins (and Adelie penguins,) while there is a lesser importance in Chinstrap penguins.
+
+```{r}
+ggplot(data = peng01, 
+       aes(x = bill_length_mm, 
+           y = body_mass_kg, 
+           fill = as.factor(sex))) +
+    geom_point(shape = 21, size = 2, color='thistle4') + 
+    scale_fill_manual(values = wes_palette('FantasticFox1')) +
+    labs(title = 'Comparing body mass with bill length',
+         x = 'Bill length (mm)',
+         y = 'Body mass (kg)',
+         fill = 'Sex') + geom_smooth(method = lm, size = 0.5, color = 'thistle4')
+```
+
+Additionally, male penguins and female penguins lack visually significant differences between bill length (all males have somewhat longer bills.) The trend of heavier bird = longer bill stays, however.
+
+## Examining Bill Depth
+```{r}
+ggplot(data = peng01, 
+       aes(x = bill_depth_mm, 
+           y = body_mass_kg, 
+           fill = as.factor(species))) +
+    geom_point(shape = 21, size = 2, color='thistle4') + 
+    scale_fill_manual(values = wes_palette('FantasticFox1')) +
+    labs(title = 'Comparing body mass with bill depth',
+         x = 'Bill depth (mm)',
+         y = 'Body mass (kg)',
+         fill = 'Species') + geom_smooth(method = lm, size = 0.5, color = 'thistle4')
+```
+
+This graph demonstrates some interesting relationships. Bill depth and body mass have a positive linear relationship. Chinstrap penguins and Adelie penguins have similar bill depths, while Gentoo penguins have far shorter bill depths (but a steeper trendline.) Ksepka & Ando (2011) state that the three penguin species share a common ancestor, so I doubt this is a long-term evolutionary trait.
+
+```{r}
+ggplot(data = peng01, 
+       aes(x = bill_depth_mm, 
+           y = bill_length_mm, 
+           fill = as.factor(species))) +
+    geom_point(shape = 21, size = 2, color='thistle4') + 
+    scale_fill_manual(values = wes_palette('FantasticFox1')) +
+    labs(title = 'Comparing bill length with bill depth',
+         x = 'Bill depth (mm)',
+         y = 'Bill length (mm)',
+         fill = 'Species') + geom_smooth(method = lm, size = 0.5, color = 'thistle4')
+```
+
+Bill length and bill depth demonstrate a similar pattern: longer bills often have greater depth. Not much can be said about this.
+
+# Conclusions
+- Gentoo penguins are generally the largest among the penguin species. This may have something to do with their reproductive habits not being as affected by the loss of ice, and general ease of foraging. They are also the species with the lowest bill depths.
+- Adelie and Chinstrap penguins are very similar, making Gentoo the outlier in its genus.
+- Adelie penguins are distributed among the three islands, whereas Chinstrap and Gentoo penguins are more “exclusive” or grouped together.
+
+# References
+Carpenter-Kling, T., Handley, J. M., Connan, M., Crawford, R. J. M., Makhado, A. B., Dyer, B. M., Froneman, W., Lamont, T., Wolfaardt, A. C., Landman, M., Sigqala, M., & Pistorius, P. A. (2019). Gentoo penguins as sentinels of climate change at the sub-Antarctic Prince Edward Archipelago, Southern Ocean. *Ecological Indicators*, 101, 163–172. https://doi.org/10.1016/j.ecolind.2019.01.008
+
+Davis, L. S., & Darby, J. T. (2012). *Penguin Biology.* Elsevier.
+
+Juáres, M. A., Casaux, R., Negrete, J., Rios, A., Castillo, M., Coria, N. R., & Santos, M. M. (2019). Update of the population size and breeding performance of gentoo penguins (Pygoscelis papua) at Stranger Point/Cabo Funes, South Shetland Islands. Polar Biology, 43(2), 123–129. https://doi.org/10.1007/s00300-019-02614-0
+
+Kokubun, N., Takahashi, A., Mori, Y., Watanabe, S., & Shin, H.-C. (2009). Comparison of diving behavior and foraging habitat use between chinstrap and gentoo penguins breeding in the South Shetland Islands, Antarctica. *Marine Biology*, 157(4), 811–825. https://doi.org/10.1007/s00227-009-1364-1
+
+Ksepka, D. T., & Ando, T. (2011). Penguins past, present, and future: trends in the evolution of the Sphenisciformes. *Living dinosaurs*, 155-186.
+
+Lynch, H. J., Fagan, W. F., & Naveen, R. (2009). Population trends and reproductive success at a frequently visited penguin colony on the western Antarctic Peninsula. *Polar Biology*, 33(4), 493–503. https://doi.org/10.1007/s00300-009-0726-y
