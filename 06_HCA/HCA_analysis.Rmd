@@ -1,0 +1,83 @@
+---
+title: "HCA Analysis"
+author: "Kaila Velasco"
+date: "2023-10-11"
+output: html_document
+---
+# Setup
+```{r}
+data <- read.csv("fish4.csv")
+row.names(data) <- data$Fish
+data[1] <- NULL
+data
+distance_measure <- dist(data, method = 'binary')
+distance_measure
+```
+
+# Hands-On Outputs
+
+## Output 1
+**Bring out the documentation for the `dist` command. What acceptable values can the `method` argument take?**
+
+The `method` argument for `dist()` can accept the values `euclidean`, `maximum`, `manhattan`, `canberra`, `binary`, or `minkowski`.
+
+## Output 2
+**Prepare dendrograms using `single` and `average` linkage rules.**
+```{r}
+plot(hclust(distance_measure, method = 'single'))
+plot(hclust(distance_measure, method = 'average'))
+```
+
+# Exercises
+
+## Exercise 1
+
+**The clustering approach that was performed in this activity is referred to as *agglomerative*. Differentiate it with another approach called *divisive*.**
+
+"Agglomerative" clustering is "bottom-up." Items are all sorted as individual entities, and then they are merged together to form the clusters. In contrast, "divisive" clustering is considered "top-down" and involves one big group that is split up into clusters as part of the clustering process.
+
+## Exercise 2
+
+**Compare and contrast HCA from K-means clustering.**
+
+As indicated by the name, they are both methods of sorting data.
+
+K-means clustering involves specifying a set number of clusters, and allowing the algorithm to sort entries into the clusters based on the provided parameters.
+
+HCA however requires a method. The final number of clusters varies in the end, based on the method which was chosen in the first place.
+
+## Exercise 3
+
+**Perform HCA on the iris dataset. Compare the results with k-means clustering (which you performed in the past activity). For this dataset, which do you think is a better method to group data?**
+
+### HCA
+
+The procedure for constructing an HCA for the iris dataset is as follows:
+
+```{r}
+iris_data <- iris[1:4]
+iris_data_std <- scale(iris_data)
+iris.dist <- dist(iris_data_std)
+hc.out_iris <- hclust(iris.dist, method = "complete")
+plot(hc.out_iris)
+rect.hclust(hc.out_iris, k = 3, border = 2:5)
+```
+
+### K-means
+
+Now, I will quickly perform a K-means clustering of the dataset. I will not go into too much detail for the sake of my own sanity.
+
+```{r setup_cluster_1, echo=TRUE, results= 'hide'}
+set.seed(1234)
+library(factoextra)
+```
+
+```{r k_means.cluster}
+sc_df <- scale(iris[1:4], center = T, scale = T)
+clust <- kmeans(sc_df, centers = 3, n = 50)
+fviz_cluster(clust, data = sc_df)
+```
+
+As can be seen, using the K-means method to cluster items into three (3) groups creates groups which are sized similarly to the clusters in the third group.
+
+In my opinion, the K-means method and HCA methods are equally good for this particular dataset. They seemed to be both able to identify patterns which could separate the three iris species, which is why there is one big red cluster, a smaller blue cluster, and an even smaller green cluster with both methods. Of course, when there are many more species and the number of observations per species is not equal, K-means might be better.
