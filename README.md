@@ -7,3 +7,4 @@ A repository dedicated to my coursework in my **LBOBI27** (Data Science for Life
 3. ggplot2 exercises
 4. Other visualizaiton exercises
 5. Exploratory Data Analysis Exam
+6. HCA
